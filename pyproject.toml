@@ -1,0 +1,45 @@
+[project]
+name = "legifrance-mcp"
+version = "0.1.0"
+description = "MCP server for Légifrance API (DILA via PISTE) — codes consolidés, JORF, LODA — Etik Pharma"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Mehdi Gharbi", email = "fqwqfq@gmail.com" }]
+license = { text = "MIT" }
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+legifrance-mcp = "legifrance_mcp.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/legifrance_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "e2e: hits live api.piste.gouv.fr (set LEGIFRANCE_E2E=1 to run, needs PISTE_CLIENT_ID/SECRET)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
