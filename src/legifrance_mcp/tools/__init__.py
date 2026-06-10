@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
 
-def register_all(mcp: "FastMCP") -> None:
+def register_all(mcp: FastMCP) -> None:
     """Register every tool module on the given FastMCP instance."""
     from legifrance_mcp.tools import (  # noqa: PLC0415
         get_article,

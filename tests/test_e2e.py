@@ -74,7 +74,11 @@ async def test_search_loda_biosimilaire(client):
                     {
                         "typeChamp": "ALL",
                         "criteres": [
-                            {"typeRecherche": "UN_DES_MOTS", "valeur": "biosimilaire", "operateur": "ET"}
+                            {
+                                "typeRecherche": "UN_DES_MOTS",
+                                "valeur": "biosimilaire",
+                                "operateur": "ET",
+                            }
                         ],
                         "operateur": "ET",
                     }

@@ -37,7 +37,7 @@ class ConsultLodaInput(StrictBase):
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
-def register(mcp: "FastMCP") -> None:
+def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="consult_loda",
         annotations={
