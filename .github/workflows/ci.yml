@@ -1,0 +1,26 @@
+name: CI
+
+# Sécurité : ce workflow n'interpole aucun input non fiable (github.event.*)
+# dans les commandes run — uniquement des commandes statiques.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Tests (pytest, mocked — e2e skippés sans LEGIFRANCE_E2E=1)
+        run: uv run --extra dev pytest tests/ -q
