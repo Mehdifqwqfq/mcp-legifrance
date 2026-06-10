@@ -36,7 +36,7 @@ class LegifranceClient:
         )
         self._tokens = PisteTokenProvider(settings, self._http)
 
-    async def __aenter__(self) -> "LegifranceClient":
+    async def __aenter__(self) -> LegifranceClient:
         return self
 
     async def __aexit__(

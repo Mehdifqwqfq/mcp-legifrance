@@ -44,7 +44,7 @@ class GetCodeTocInput(StrictBase):
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
 
 
-def register(mcp: "FastMCP") -> None:
+def register(mcp: FastMCP) -> None:
     @mcp.tool(
         name="get_code_toc",
         annotations={
@@ -78,7 +78,8 @@ def register(mcp: "FastMCP") -> None:
 def _format_md(data: dict, *, max_depth: int, date_iso: str) -> str:
     lines = [
         f"### {data.get('title') or '(code sans titre)'}",
-        f"**Date** : {date_iso} · **CID** : `{data.get('cid')}` · **NOR** : {data.get('nor') or '—'}",
+        f"**Date** : {date_iso} · **CID** : `{data.get('cid')}` · "
+        f"**NOR** : {data.get('nor') or '—'}",
         "",
     ]
     sections = data.get("sections") or []
