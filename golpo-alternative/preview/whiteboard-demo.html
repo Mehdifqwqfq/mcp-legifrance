@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Démo vidéo tableau blanc — sans Golpo</title>
+<style>
+  :root{
+    --page:#e7e6e1; --page-2:#deded7;
+    --ink:#22252b; --muted:#6b7078;
+    --card:#ffffff; --line:#d3d2cb;
+    --accent:#3d5a99;
+    --board:#fcfcfa; --board-edge:#e4e3da; --board-shadow:rgba(20,22,28,.18);
+    --tray:#c9c8c0;
+    font-synthesis:none;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --page:#14161b; --page-2:#0f1014;
+      --ink:#e9eaed; --muted:#9aa0a8;
+      --card:#1b1e24; --line:#2a2e36;
+      --board-shadow:rgba(0,0,0,.5);
+      --tray:#3a3d44;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  .wrap{
+    min-height:100vh;
+    background:radial-gradient(1200px 600px at 50% -10%, var(--page-2), var(--page));
+    color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex;flex-direction:column;align-items:center;
+    padding:clamp(16px,4vw,40px);gap:18px;
+  }
+  header.top{width:min(920px,100%);display:flex;flex-direction:column;gap:6px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{margin:0;font-size:clamp(20px,3.4vw,30px);line-height:1.1;letter-spacing:-.01em;text-wrap:balance;font-weight:750}
+  h1 .thin{color:var(--muted);font-weight:500}
+  .stage{
+    width:min(920px,100%);background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:clamp(12px,2.5vw,20px);
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 18px 40px -24px var(--board-shadow);
+  }
+  .board-frame{position:relative;border-radius:12px}
+  .board{
+    display:block;width:100%;height:auto;border-radius:12px;
+    background:linear-gradient(180deg,#ffffff, var(--board));
+    box-shadow:0 10px 30px -12px var(--board-shadow), 0 0 0 1px var(--board-edge) inset;
+  }
+  .tray{height:12px;margin:8px 6% 0;border-radius:0 0 10px 10px;background:linear-gradient(180deg,var(--tray),transparent);opacity:.7}
+  .caption{
+    width:min(920px,100%);min-height:52px;display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:10px 16px;border-radius:12px;background:var(--card);border:1px solid var(--line);
+    color:var(--ink);font-size:clamp(15px,2vw,18px);line-height:1.4;
+    opacity:0;transform:translateY(4px);transition:opacity .35s,transform .35s;
+  }
+  .caption.show{opacity:1;transform:none}
+  .caption .q{color:var(--muted)}
+  .controls{width:min(920px,100%);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .btn{
+    appearance:none;border:0;cursor:pointer;background:var(--accent);color:#fff;font-weight:650;font-size:15px;
+    padding:11px 20px;border-radius:11px;display:inline-flex;align-items:center;gap:9px;
+    box-shadow:0 10px 22px -12px var(--accent);transition:transform .12s,filter .2s,opacity .2s;
+  }
+  .btn:hover{filter:brightness(1.05)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.55;cursor:default;box-shadow:none}
+  .btn:focus-visible{outline:3px solid color-mix(in srgb,var(--accent),#fff 40%);outline-offset:2px}
+  .rail{display:flex;align-items:center;gap:14px;flex:1;min-width:220px}
+  .ticks{display:flex;gap:10px;flex:1}
+  .tick{flex:1;display:flex;flex-direction:column;gap:6px}
+  .tick .bar{height:5px;border-radius:99px;background:var(--line);overflow:hidden;position:relative}
+  .tick .bar > i{position:absolute;inset:0;width:0;border-radius:99px;background:var(--tk,var(--accent));transition:width .2s linear}
+  .tick .lb{font-size:11px;color:var(--muted);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tick.active .lb{color:var(--ink);font-weight:600}
+  footer.note{width:min(920px,100%);color:var(--muted);font-size:12.5px;line-height:1.5;display:flex;gap:8px 18px;flex-wrap:wrap}
+  footer.note code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:color-mix(in srgb,var(--ink) 8%,transparent);padding:1px 6px;border-radius:6px;font-size:12px}
+  .pill{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:99px;background:currentColor;opacity:.6}
+  .drawn{fill:none;stroke-linecap:round;stroke-linejoin:round}
+  #board-title{font-family:ui-sans-serif,system-ui,sans-serif;font-weight:750;font-size:30px;opacity:0;transition:opacity .4s}
+  #pen{opacity:0;transition:opacity .25s}
+  .hint{fill:#adaca3;font-size:19px;font-family:ui-sans-serif,system-ui,sans-serif}
+  @media (prefers-reduced-motion:reduce){.caption,#board-title{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Sans Golpo · pipeline maison</span>
+    <h1>Une vidéo « tableau blanc » <span class="thin">— qui explique comment elle a été faite</span></h1>
+  </header>
+
+  <div class="stage">
+    <div class="board-frame">
+      <svg class="board" viewBox="0 0 900 480" role="img" aria-label="Tableau blanc animé expliquant le pipeline">
+        <defs>
+          <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M30 0H0V30" fill="none" stroke="#000" stroke-opacity="0.025" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="900" height="480" fill="url(#grid)"/>
+        <text id="board-title" x="60" y="72" fill="#3d5a99">1 · Le script</text>
+        <g id="draw-layer"></g>
+        <text id="board-hint" class="hint" x="450" y="250" text-anchor="middle">Appuie sur « Lancer la démo »</text>
+        <g id="pen">
+          <g transform="rotate(40)">
+            <polygon points="0,0 7,-13 -7,-13" fill="#2b2b2b"/>
+            <rect x="-7" y="-13" width="14" height="7" fill="#8a8f98"/>
+            <rect x="-7" y="-58" width="14" height="45" rx="5" fill="#ef6f53"/>
+            <rect x="-7" y="-58" width="14" height="9" rx="5" fill="#2b2b2b"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="tray"></div>
+  </div>
+
+  <div class="caption" id="caption"><span class="q">La narration synchronisée s'affichera ici.</span></div>
+
+  <div class="controls">
+    <button class="btn" id="play" aria-label="Lancer la démonstration">
+      <svg width="14" height="14" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1.5v9l8-4.5z" fill="currentColor"/></svg>
+      <span id="play-label">Lancer la démo</span>
+    </button>
+    <div class="rail"><div class="ticks" id="ticks"></div></div>
+  </div>
+
+  <footer class="note">
+    <span class="pill"><span class="dot"></span>Voix : <code>SpeechSynthesis</code> (Web Speech API, navigateur)</span>
+    <span class="pill"><span class="dot"></span>Tracé : SVG <code>stroke-dashoffset</code> + <code>getPointAtLength</code></span>
+    <span class="pill"><span class="dot"></span>Zéro dépendance, zéro réseau</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SVGNS="http://www.w3.org/2000/svg";
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var scenes = [
+    { title:"1 · Le script", color:"#3d5a99",
+      narration:"D'abord, un modèle de langage transforme ton document en un script, découpé scène par scène.",
+      paths:[
+        {d:"M360 120 H500 L560 180 V360 H360 Z", w:5},
+        {d:"M500 120 V180 H560", w:5},
+        {d:"M392 224 H520", w:5},
+        {d:"M392 262 H520", w:5},
+        {d:"M392 300 H468", w:5}
+      ]},
+    { title:"2 · La voix", color:"#c1436d",
+      narration:"Ensuite, une synthèse vocale génère la narration, dans la langue et le ton de ton choix.",
+      paths:[
+        {d:"M372 218 H410 L462 176 V304 L410 262 H372 Z", w:5},
+        {d:"M498 222 Q524 240 498 258", w:5},
+        {d:"M524 200 Q566 240 524 280", w:5}
+      ]},
+    { title:"3 · Le tracé", color:"#2a9d8f",
+      narration:"Chaque dessin s'anime au tracé : un SVG qui s'écrit tout seul, avec une main qui suit la ligne.",
+      paths:[
+        {d:"M356 322 C420 300 438 214 500 206 S612 250 648 190", w:6},
+        {d:"M648 190 L622 196", w:5},
+        {d:"M648 190 L640 214", w:5}
+      ]},
+    { title:"4 · Le montage", color:"#e0913a",
+      narration:"Enfin, tout est assemblé et synchronisé en une seule vidéo. Aucun Golpo requis.",
+      paths:[
+        {d:"M356 250 H560 V332 H356 Z", w:5},
+        {d:"M356 250 L364 214 L566 224 L560 250", w:5},
+        {d:"M404 217 L396 250", w:4},
+        {d:"M452 220 L444 250", w:4},
+        {d:"M500 223 L492 250", w:4}
+      ]}
+  ];
+
+  var drawLayer = document.getElementById("draw-layer");
+  var titleEl = document.getElementById("board-title");
+  var hintEl = document.getElementById("board-hint");
+  var pen = document.getElementById("pen");
+  var caption = document.getElementById("caption");
+  var playBtn = document.getElementById("play");
+  var ticksEl = document.getElementById("ticks");
+
+  var tickNodes = scenes.map(function(s){
+    var t=document.createElement("div"); t.className="tick";
+    t.innerHTML='<div class="bar"><i></i></div><div class="lb"></div>';
+    t.querySelector(".lb").textContent = s.title;
+    t.querySelector("i").style.setProperty("--tk", s.color);
+    ticksEl.appendChild(t); return t;
+  });
+
+  var voices=[];
+  function loadVoices(){ try{ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }catch(e){ voices=[]; } }
+  if("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+
+  function speak(text){
+    return new Promise(function(res){
+      if(!("speechSynthesis" in window)){ res(); return; }
+      var done=false, startWatch=null, endWatch=null;
+      function fin(){
+        if(done) return; done=true;
+        clearTimeout(startWatch); clearTimeout(endWatch);
+        res();
+      }
+      try{
+        speechSynthesis.cancel();
+        if(!voices.length) loadVoices(); // les voix arrivent parfois après le 1er clic
+        var u=new SpeechSynthesisUtterance(text);
+        u.lang="fr-FR"; u.rate=1; u.pitch=1;
+        var fr=voices.filter(function(v){return /^fr/i.test(v.lang);})[0];
+        if(fr) u.voice=fr;
+        u.onend=fin; u.onerror=fin;
+        // Filets de sécurité pour les moteurs qui n'émettent jamais d'événements :
+        // si la lecture ne démarre pas en 4 s on continue ; si elle démarre,
+        // garde-fou large (250 ms/caractère) pour ne pas tronquer une voix lente.
+        startWatch=setTimeout(fin, 4000);
+        u.onstart=function(){
+          clearTimeout(startWatch);
+          endWatch=setTimeout(fin, Math.max(6000, text.length*250));
+        };
+        speechSynthesis.speak(u);
+      }catch(e){ fin(); }
+    });
+  }
+
+  function wait(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  function ease(p){ return p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2; }
+
+  function makePath(d,color,w){
+    var el=document.createElementNS(SVGNS,"path");
+    el.setAttribute("d",d); el.setAttribute("class","drawn");
+    el.setAttribute("stroke",color); el.setAttribute("stroke-width",w);
+    el.style.opacity="0"; drawLayer.appendChild(el); return el;
+  }
+
+  function drawOne(el,dur){
+    return new Promise(function(res){
+      var len=el.getTotalLength();
+      el.style.strokeDasharray=len; el.style.strokeDashoffset=len; el.style.opacity="1";
+      if(reduce){ el.style.strokeDashoffset="0"; res(); return; }
+      pen.style.opacity="1";
+      var t0=null;
+      function frame(now){
+        if(t0===null) t0=now;
+        var p=Math.min(1,(now-t0)/dur), e=ease(p);
+        el.style.strokeDashoffset=len*(1-e);
+        var pt=el.getPointAtLength(e*len);
+        pen.setAttribute("transform","translate("+pt.x+","+pt.y+")");
+        if(p<1) requestAnimationFrame(frame); else res();
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  async function drawScene(scene){
+    // estompe les tracés des scènes précédentes : le tableau reste lisible
+    Array.prototype.forEach.call(drawLayer.children,function(el){
+      el.style.transition="opacity .6s"; el.style.opacity="0.13";
+    });
+    titleEl.textContent=scene.title;
+    titleEl.setAttribute("fill",scene.color);
+    titleEl.style.opacity="0";
+    requestAnimationFrame(function(){ titleEl.style.opacity="1"; });
+    for(var i=0;i<scene.paths.length;i++){
+      var p=scene.paths[i];
+      var el=makePath(p.d,scene.color,p.w||5);
+      var len=el.getTotalLength();
+      var dur=Math.max(360,Math.min(1500,len/0.5));
+      await drawOne(el,dur);
+      await wait(90);
+    }
+    pen.style.opacity="0";
+  }
+
+  function setActive(i){
+    tickNodes.forEach(function(t,j){
+      t.classList.toggle("active", j===i);
+      t.querySelector("i").style.width = j<i ? "100%" : "0";
+    });
+  }
+  function markProgress(i){ tickNodes[i].querySelector("i").style.width="100%"; }
+
+  async function runScene(scene,i){
+    setActive(i);
+    caption.textContent=scene.narration; caption.classList.add("show");
+    await Promise.all([ drawScene(scene), speak(scene.narration) ]);
+    markProgress(i);
+    await wait(450);
+  }
+
+  function reset(){
+    drawLayer.innerHTML=""; pen.style.opacity="0";
+    tickNodes.forEach(function(t){ t.classList.remove("active"); t.querySelector("i").style.width="0"; });
+  }
+
+  var playLabel=document.getElementById("play-label");
+  var running=false;
+  async function run(){
+    if(running) return; running=true;
+    try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){}
+    if(hintEl) hintEl.style.display="none";
+    reset();
+    playBtn.disabled=true;
+    playLabel.textContent="Lecture…";
+    for(var i=0;i<scenes.length;i++){ await runScene(scenes[i],i); }
+    playBtn.disabled=false;
+    playLabel.textContent="Rejouer";
+    running=false;
+  }
+
+  playBtn.addEventListener("click", run);
+})();
+</script>
+</body>
+</html>

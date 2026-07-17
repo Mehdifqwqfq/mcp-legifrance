@@ -1,0 +1,54 @@
+[
+  {
+    "id": "script",
+    "title": "1 · Le script",
+    "narration": "D'abord, un modèle de langage transforme ton document en un script, découpé scène par scène.",
+    "color": "#3d5a99",
+    "durationInSeconds": 5.5,
+    "paths": [
+      { "d": "M360 120 H500 L560 180 V360 H360 Z", "w": 5 },
+      { "d": "M500 120 V180 H560", "w": 5 },
+      { "d": "M392 224 H520", "w": 5 },
+      { "d": "M392 262 H520", "w": 5 },
+      { "d": "M392 300 H468", "w": 5 }
+    ]
+  },
+  {
+    "id": "voix",
+    "title": "2 · La voix",
+    "narration": "Ensuite, une synthèse vocale génère la narration, dans la langue et le ton de ton choix.",
+    "color": "#c1436d",
+    "durationInSeconds": 5.5,
+    "paths": [
+      { "d": "M372 218 H410 L462 176 V304 L410 262 H372 Z", "w": 5 },
+      { "d": "M498 222 Q524 240 498 258", "w": 5 },
+      { "d": "M524 200 Q566 240 524 280", "w": 5 }
+    ]
+  },
+  {
+    "id": "trace",
+    "title": "3 · Le tracé",
+    "narration": "Chaque dessin s'anime au tracé : un SVG qui s'écrit tout seul, avec une main qui suit la ligne.",
+    "color": "#2a9d8f",
+    "durationInSeconds": 6,
+    "paths": [
+      { "d": "M356 322 C420 300 438 214 500 206 S612 250 648 190", "w": 6 },
+      { "d": "M648 190 L622 196", "w": 5 },
+      { "d": "M648 190 L640 214", "w": 5 }
+    ]
+  },
+  {
+    "id": "montage",
+    "title": "4 · Le montage",
+    "narration": "Enfin, tout est assemblé et synchronisé en une seule vidéo. Aucun Golpo requis.",
+    "color": "#e0913a",
+    "durationInSeconds": 5,
+    "paths": [
+      { "d": "M356 250 H560 V332 H356 Z", "w": 5 },
+      { "d": "M356 250 L364 214 L566 224 L560 250", "w": 5 },
+      { "d": "M404 217 L396 250", "w": 4 },
+      { "d": "M452 220 L444 250", "w": 4 },
+      { "d": "M500 223 L492 250", "w": 4 }
+    ]
+  }
+]

@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>apothicAIre — Fiche outil : Golpo</title>
+<style>
+  :root{
+    --paper:#f7f3e9; --paper-2:#efe8d6; --card:#fffdf7;
+    --ink:#23281f; --muted:#5f6a58; --faint:#8a9080;
+    --green:#0f5a3c; --green-deep:#0b3d29; --brass:#a9772f; --brass-soft:#c79a54;
+    --line:#ddd5c1; --line-2:#e7e0cf;
+    --good:#1f7a4d; --good-bg:#e6f0e6;
+    --warn:#9a6a12; --warn-bg:#f6ecd6;
+    --bad:#9d3a34; --bad-bg:#f3e2df;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Helvetica Neue",Arial,"Liberation Sans",system-ui,sans-serif;
+    color:var(--ink);background:#cfc9b8;
+    font-size:11.5px;line-height:1.36;
+  }
+  .serif{font-family:Georgia,"Liberation Serif","Times New Roman",serif}
+  .mono{font-family:"DejaVu Sans Mono",ui-monospace,Menlo,Consolas,monospace}
+
+  @page{size:A4;margin:0}
+  .page{
+    width:210mm;min-height:297mm;background:var(--paper);
+    padding:10mm 12mm 9mm;margin:0 auto;position:relative;overflow:hidden;
+  }
+  .page + .page{page-break-before:always}
+
+  /* ---------- masthead ---------- */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:2.5px solid var(--green);padding-bottom:6px;margin-bottom:9px}
+  .brand{font-family:Georgia,"Liberation Serif",serif;font-weight:700;font-size:24px;letter-spacing:-.5px;line-height:1;color:var(--green)}
+  .brand b{color:var(--brass);font-style:italic}
+  .brand small{display:block;font-family:"Helvetica Neue",Arial,sans-serif;font-weight:400;
+    font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .mh-right{text-align:right;font-size:9px;color:var(--muted);line-height:1.45}
+  .mh-right .tag{display:inline-block;background:var(--green);color:#f7f3e9;font-weight:700;
+    letter-spacing:.1em;text-transform:uppercase;font-size:8.5px;padding:2px 8px;border-radius:3px;margin-bottom:3px}
+
+  /* ---------- hero ---------- */
+  .hero{display:grid;grid-template-columns:1fr 62mm;gap:10px;margin-bottom:8px}
+  .eyebrow{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass);font-weight:700}
+  h1.title{font-family:Georgia,"Liberation Serif",serif;font-size:45px;line-height:.92;margin:3px 0 4px;letter-spacing:-1px;color:var(--green-deep)}
+  .lede{font-size:12.5px;line-height:1.36;color:var(--ink);max-width:97%}
+  .verdict{margin-top:7px;background:var(--green-deep);color:#f4efe1;border-radius:7px;padding:8px 11px;display:flex;gap:10px;align-items:center}
+  .verdict .score{font-family:Georgia,serif;font-size:22px;font-weight:700;line-height:1;color:#fff;white-space:nowrap}
+  .verdict .score small{display:block;font-family:"Helvetica Neue",Arial,sans-serif;font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass-soft);margin-top:3px}
+  .verdict .vtxt{font-size:10.5px;line-height:1.32;border-left:1px solid rgba(255,255,255,.25);padding-left:10px}
+  .verdict .vtxt b{color:#fff}
+
+  /* ---------- id card ---------- */
+  .idcard{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px;box-shadow:0 1px 0 #fff inset}
+  .idcard h3{margin:0 0 6px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);border-bottom:1px solid var(--line-2);padding-bottom:5px}
+  .idrow{display:flex;gap:8px;padding:2.5px 0;font-size:10px;border-bottom:1px dotted var(--line-2)}
+  .idrow:last-child{border-bottom:0}
+  .idrow .k{color:var(--muted);flex:0 0 31%;font-weight:600}
+  .idrow .v{flex:1}
+  .idrow .v b{color:var(--green-deep)}
+  .yes{color:var(--good);font-weight:700}
+
+  /* ---------- section ---------- */
+  .sec-h{display:flex;align-items:center;gap:9px;margin:9px 0 5px}
+  .sec-h .n{font-family:Georgia,serif;font-weight:700;color:#fff;background:var(--brass);width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex:0 0 auto}
+  .sec-h h2{font-family:Georgia,"Liberation Serif",serif;font-size:15px;margin:0;color:var(--green-deep);letter-spacing:-.2px}
+  .sec-h .rule{flex:1;height:1px;background:var(--line)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 11px}
+  .panel h4{margin:0 0 5px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+  .panel.promise h4{color:var(--green)}
+  .panel.reality h4{color:var(--brass)}
+  ul.tick{list-style:none;margin:0;padding:0}
+  ul.tick li{position:relative;padding:2.5px 0 2.5px 16px;font-size:10.4px;line-height:1.32;border-bottom:1px dotted var(--line-2)}
+  ul.tick li:last-child{border-bottom:0}
+  ul.tick li::before{position:absolute;left:0;top:2.5px;font-weight:700}
+  ul.tick.good li::before{content:"✓";color:var(--good)}
+  ul.tick.warn li::before{content:"!";color:var(--warn)}
+
+  /* reviews */
+  .reviews{display:grid;grid-template-columns:1.15fr .85fr;gap:10px}
+  .quotes{display:flex;flex-direction:column;gap:7px}
+  blockquote{margin:0;background:var(--card);border-left:3px solid var(--brass);border-radius:0 6px 6px 0;padding:7px 10px;font-size:10.3px;line-height:1.35}
+  blockquote cite{display:block;margin-top:3px;font-style:normal;font-size:8.8px;color:var(--faint);letter-spacing:.03em}
+  .chips{display:flex;flex-direction:column;gap:7px}
+  .chipbox{border-radius:7px;padding:7px 9px;font-size:10px;line-height:1.32}
+  .chipbox.g{background:var(--good-bg);border:1px solid #cfe3cf}
+  .chipbox.b{background:var(--bad-bg);border:1px solid #e7cdc9}
+  .chipbox h5{margin:0 0 3px;font-size:9px;letter-spacing:.09em;text-transform:uppercase}
+  .chipbox.g h5{color:var(--good)}
+  .chipbox.b h5{color:var(--bad)}
+  .chipbox p{margin:0}
+
+  /* officine examples */
+  .grid4{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .use{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;position:relative}
+  .use .ic{font-size:13px;line-height:1}
+  .use h4{margin:3px 0 2px;font-size:11px;color:var(--green-deep)}
+  .use p{margin:0 0 5px;font-size:10px;line-height:1.3;color:var(--ink)}
+  .use .meta{font-size:8.8px;color:var(--muted);border-top:1px dotted var(--line-2);padding-top:4px}
+  .use .meta b{color:var(--brass)}
+
+  /* pricing table */
+  table.price{width:100%;border-collapse:collapse;font-size:10px;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  table.price th,table.price td{padding:4px 7px;text-align:left;border-bottom:1px solid var(--line-2)}
+  table.price th{background:var(--green);color:#f4efe1;font-size:8.8px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+  table.price td:nth-child(2),table.price td:nth-child(3){font-variant-numeric:tabular-nums;white-space:nowrap}
+  table.price tr:last-child td{border-bottom:0}
+  table.price .free td{background:#f0ece0}
+  table.price .hi td{background:#eef4ee}
+  table.price b{color:var(--green-deep)}
+
+  .callout{margin-top:7px;background:var(--brass);color:#fff;border-radius:8px;padding:8px 11px;font-size:10.5px;line-height:1.35;display:flex;gap:10px;align-items:baseline}
+  .callout .big{font-family:Georgia,serif;font-weight:700;font-size:14px;white-space:nowrap}
+  .callout .big small{font-weight:400;font-size:9.5px;opacity:.85}
+
+  .apibox{background:var(--green-deep);color:#eef2e6;border-radius:8px;padding:9px 12px}
+  .apibox h4{margin:0 0 5px;color:#fff;font-size:11px;display:flex;align-items:center;gap:8px}
+  .apibox .badge{background:var(--brass);color:#fff;font-size:8px;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:20px;font-weight:700}
+  .apibox p{margin:0 0 5px;font-size:10px;line-height:1.35;color:#d8e0cf}
+  .apibox code.blk{display:block;background:#0a3020;border:1px solid #1c5138;border-radius:5px;padding:6px 8px;font-size:9.3px;color:#cfe6d5;margin:5px 0;white-space:pre-wrap}
+  .apibox .warnline{color:var(--brass-soft);font-size:9.3px;margin-top:5px}
+
+  /* tips */
+  ol.tips{margin:0;padding:0;list-style:none;counter-reset:t;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+  ol.tips li{counter-increment:t;position:relative;padding:1.5px 0 1.5px 25px;font-size:10.1px;line-height:1.32}
+  ol.tips li::before{content:counter(t);position:absolute;left:0;top:1px;background:var(--green);color:#fff;
+    width:17px;height:17px;border-radius:50%;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif}
+  ol.tips li b{color:var(--green-deep)}
+
+  /* competition */
+  table.comp{width:100%;border-collapse:collapse;font-size:9.6px;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  table.comp th,table.comp td{padding:4px 7px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top}
+  table.comp th{background:var(--green-deep);color:#eef2e6;font-size:8.3px;letter-spacing:.05em;text-transform:uppercase}
+  table.comp tr:last-child td{border-bottom:0}
+  table.comp .star td{background:#eef4ee}
+  table.comp b{color:var(--green-deep)}
+  .tagm{display:inline-block;font-size:8.3px;padding:1px 6px;border-radius:20px;font-weight:700}
+  .tagm.ok{background:var(--good-bg);color:var(--good)}
+  .tagm.no{background:#eceae1;color:var(--faint)}
+
+  /* footer */
+  .foot{margin-top:10px;border-top:1.5px solid var(--green);padding-top:7px;font-size:8.4px;color:var(--muted);line-height:1.42}
+  .foot .disc{background:var(--warn-bg);border:1px solid #e6d6ad;border-radius:6px;padding:6px 8px;color:#6d5310;margin-bottom:5px;font-size:8.8px}
+  .foot .disc b{color:var(--bad)}
+  .pagenum{position:absolute;bottom:5mm;right:12mm;font-size:8.8px;color:var(--faint)}
+  .pagenum .b{color:var(--green);font-weight:700}
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<section class="page">
+  <div class="masthead">
+    <div class="brand">apothic<b>AI</b>re<small>Le mag des pharmaciens à l'ère de l'IA</small></div>
+    <div class="mh-right">
+      <span class="tag">Fiche outil</span><br>
+      Rubrique · Vidéo &amp; contenu patient<br>
+      Vérifié le 17 juil. 2026
+    </div>
+  </div>
+
+  <div class="hero">
+    <div>
+      <div class="eyebrow">Génération vidéo IA · explainer « tableau blanc »</div>
+      <h1 class="title serif">Golpo</h1>
+      <div class="lede">Un document (PDF/DOCX/PPT), un script ou un simple prompt&nbsp;→ une vidéo pédagogique <b>« tableau blanc »</b> complète&nbsp;: script, voix off synchronisée et animation, en quelques minutes, en 50+ langues.</div>
+      <div class="verdict">
+        <div class="score">3,5<small>Avis rédac /5</small></div>
+        <div class="vtxt"><b>Bluffant pour vulgariser</b> un sujet santé en 2 min. À cadrer&nbsp;: noir &amp; blanc avant 200 $/mois, budget qui grimpe vite (crédit = minute) et <b>toute sortie doit être validée par un pharmacien</b>.</div>
+      </div>
+    </div>
+
+    <aside class="idcard">
+      <h3>Carte d'identité</h3>
+      <div class="idrow"><span class="k">Éditeur</span><span class="v"><b>Golpo AI</b> — startup (Y Combinator)</span></div>
+      <div class="idrow"><span class="k">Catégorie</span><span class="v">Vidéo explicative whiteboard par IA</span></div>
+      <div class="idrow"><span class="k">Entrée</span><span class="v">Doc, script ou prompt</span></div>
+      <div class="idrow"><span class="k">Sortie</span><span class="v">MP4 + SRT séparé · 50+ langues (dès Creator)</span></div>
+      <div class="idrow"><span class="k">Accès dev</span><span class="v">API REST + SDK · <b>MCP officiel</b> <span class="yes">✓ Claude</span></span></div>
+      <div class="idrow"><span class="k">Entrée prix</span><span class="v">Gratuit (1 min, unique) · dès <b>39,99 $/mois</b></span></div>
+      <div class="idrow"><span class="k">Pay-as-you-go</span><span class="v"><span class="yes">Oui</span> — recharge &amp; API à la minute</span></div>
+      <div class="idrow"><span class="k">Unité</span><span class="v"><b>1 crédit = 1 minute</b> de vidéo</span></div>
+    </aside>
+  </div>
+
+  <div class="sec-h"><span class="n serif">P</span><h2 class="serif">Promesse vs Réalité</h2><span class="rule"></span></div>
+  <div class="two">
+    <div class="panel promise">
+      <h4>La promesse</h4>
+      <ul class="tick good">
+        <li>Coller un prompt ou déposer un PDF, obtenir une vidéo complète « sans compétence technique ».</li>
+        <li>Script, voix off et animation <b>générés et synchronisés</b> automatiquement.</li>
+        <li>Style pédagogique Khan Academy / RSA Animate, idéal pour expliquer.</li>
+        <li>Tout <b>éditable au prompt</b>&nbsp;: scénario, ton de voix, langue, musique, logo.</li>
+      </ul>
+    </div>
+    <div class="panel reality">
+      <h4>La réalité (terrain)</h4>
+      <ul class="tick warn">
+        <li>Ça tient la promesse&nbsp;: génération en <b>~10–15 min</b>, qualité pro, contrôle scène par scène.</li>
+        <li><b>Noir &amp; blanc</b> avant le palier Growth (199,99 $/mois)&nbsp;; lisibilité seniors critiquée.</li>
+        <li><b>Le coût grimpe</b> vite&nbsp;; <b>ré-édition refacturée</b>, et verrouillée avant Growth/Business.</li>
+        <li>Téléchargement <b>payant</b> (watermark en gratuit)&nbsp;; cohérence visuelle inégale entre scènes.</li>
+        <li>Outil <b>jeune</b> (2025)&nbsp;: 1 seul avis vérifiable&nbsp;; licences voix/musique à clarifier.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec-h"><span class="n serif">A</span><h2 class="serif">Avis d'utilisateurs réels</h2><span class="rule"></span></div>
+  <div class="reviews">
+    <div class="quotes">
+      <blockquote>« Globalement, une première version épatante — <b>fluide, élégante</b> et pleine de potentiel. »<cite>— Commentaire de lancement, Product Hunt (août 2025)</cite></blockquote>
+      <blockquote>« C'est génial, je vais m'en servir énormément »… mais « <b>le même objet change d'apparence</b> d'une scène à l'autre ».<cite>— Fils Hacker News, Launch HN (116 points, août 2025)</cite></blockquote>
+      <blockquote>« Tarification <b>très raide</b>&nbsp;: les fonctions clés (couleur, édition) sont verrouillées derrière le palier Growth à 199,99 $. »<cite>— Test Dev Kant Kumar (2026)</cite></blockquote>
+    </div>
+    <div class="chips">
+      <div class="chipbox g">
+        <h5>On aime</h5>
+        <p>Simplicité radicale · doc → vidéo natif · voix jugées naturelles · fondateurs réactifs · contrôle par scène.</p>
+      </div>
+      <div class="chipbox b">
+        <h5>On déplore — et un chiffre à connaître</h5>
+        <p>Tarifs qui s'accumulent · couleur dès 199,99 $ · gratuit non téléchargeable. Avis vérifiés quasi inexistants&nbsp;: 1 seul sur Product Hunt (5/5), zéro sur Capterra, G2 et Trustpilot — l'éditeur revendique pourtant « 120 000 utilisateurs ».</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-h"><span class="n serif">1</span><h2 class="serif">4 usages concrets en pharmacie d'officine</h2><span class="rule"></span></div>
+  <div class="grid4">
+    <div class="use">
+      <div class="ic">🎬</div>
+      <h4>Éducation patient en salle d'attente</h4>
+      <p>Bon usage inhalateur (asthme/BPCO), stylo à insuline, anticoagulant, collyre… en boucle sur l'écran TV.</p>
+      <div class="meta">1–2 min · <b>≈ 1–2 crédits (1,5–4 $)</b> · réutilisable des années</div>
+    </div>
+    <div class="use">
+      <div class="ic">🎓</div>
+      <h4>Formation express de l'équipe</h4>
+      <p>Un PDF de protocole ou de nouvelle réglementation (sérialisation, nouvelles missions) → module d'onboarding préparateurs/étudiants.</p>
+      <div class="meta">3–4 min · <b>≈ 3–4 crédits (4–8 $)</b> · protocole → module en ~15 min</div>
+    </div>
+    <div class="use">
+      <div class="ic">📣</div>
+      <h4>Prévention &amp; réseaux / vitrine</h4>
+      <p>Vaccination grippe, TROD angine, photoprotection, iatrogénie du sujet âgé&nbsp;: clips « faceless » pour Insta ou écran vitrine.</p>
+      <div class="meta">45–90 s · <b>≈ 1 crédit (1,5–2 $)</b> · multilingue pour patientèle allophone</div>
+    </div>
+    <div class="use">
+      <div class="ic">💊</div>
+      <h4>Expliquer un nouveau service</h4>
+      <p>Bilan partagé de médication, entretien AVK/AOD, location de matériel&nbsp;: une vidéo depuis le doc HAS/Assurance Maladie pour patients &amp; équipe.</p>
+      <div class="meta">2–3 min · <b>≈ 2–3 crédits (3–6 $)</b> · support de vente conseil</div>
+    </div>
+  </div>
+
+  <div class="pagenum"><span class="b">apothicAIre</span> · Fiche Golpo · <span class="b">1</span>/2</div>
+</section>
+
+<!-- ================= PAGE 2 ================= -->
+<section class="page">
+  <div class="masthead">
+    <div class="brand">apothic<b>AI</b>re<small>Fiche outil · Golpo (suite)</small></div>
+    <div class="mh-right"><span class="tag">Officine</span><br>Prix · Claude · Astuces · Concurrence</div>
+  </div>
+
+  <div class="sec-h"><span class="n serif">2</span><h2 class="serif">Grille de prix &amp; coût à la production</h2><span class="rule"></span></div>
+  <table class="price">
+    <tr><th>Formule</th><th>Prix / mois</th><th>Crédits (min)</th><th>Pour qui / notes</th></tr>
+    <tr class="free"><td><b>Gratuit</b></td><td>0 $</td><td>1 (unique)</td><td>Test seulement — watermark, <b>téléchargement bloqué</b></td></tr>
+    <tr><td><b>Starter</b></td><td>39,99 $</td><td>20</td><td>Démarrer — sans watermark, mais <b>noir &amp; blanc</b>, ≤ 2 min, pas d'édition</td></tr>
+    <tr><td>Creator</td><td>99,99 $</td><td>60</td><td>Toujours N&amp;B · vertical 9:16 · 50+ langues</td></tr>
+    <tr class="hi"><td><b>Growth</b></td><td>199,99 $</td><td>150</td><td>1er palier <b>couleur</b>, vidéos 4 min <span class="tagm ok">choix officine</span></td></tr>
+    <tr><td>Business</td><td>499,99 $</td><td>390</td><td>Groupement&nbsp;: 10 sièges, édition incluse · API +200 $</td></tr>
+    <tr><td>Scale</td><td>999,99 $</td><td>800</td><td>Gros volume (≈ 1,25 $/min) · API incluse · Enterprise au-dessus</td></tr>
+    <tr><td>API seule</td><td>usage</td><td>2 → 1,20 $/min</td><td>Pour MCP/Claude · <b>min. 200 $/mois</b> · sans dashboard</td></tr>
+    <tr><td>Sans abonnement</td><td>usage</td><td>3,99–7,99 $/cr</td><td><b>Pay-as-you-go</b> ponctuel mais cher (min. 5 crédits, pas d'API)</td></tr>
+  </table>
+  <div class="callout">
+    <span class="big">2,50–4 $<small> la vidéo de 2 min (abonnement)</small></span>
+    <span>Soit ≈ 2,20–3,50 €. En pay-as-you-go sans abonnement&nbsp;: <b>8–16 $</b> la même vidéo ! Annuel&nbsp;: ≈ −17 %. ⚠️ Toute ré-édition refacture la durée totale. <span style="opacity:.85">(1 $ ≈ 0,87 € au 16/07/2026 · facturation en USD)</span></span>
+  </div>
+
+  <div class="sec-h"><span class="n serif">3</span><h2 class="serif">MCP · CLI · API compatible Claude</h2><span class="rule"></span></div>
+  <div class="apibox">
+    <h4>Serveur MCP officiel <span class="badge">Claude Desktop · Claude Code</span></h4>
+    <p>Golpo publie <b class="mono">Golpo-AI/golpo-mcp</b> (MIT, Python, vérifié dans le code) — 6 outils&nbsp;: <span class="mono">generate_video · upload_file · list_videos · get_video · check_status · status</span> — plus un <b>skill Claude Code officiel</b> (<span class="mono">golpo-claude-skill</span>). Clients&nbsp;: Claude Desktop/Code, Cursor, Continue, Zed, Windsurf. API REST v1/v2 (SDK Python&nbsp;; Node annoncé), en-tête <span class="mono">x-api-key</span>, narration française supportée. Pas de CLI de génération&nbsp;; client Python scriptable.</p>
+    <code class="blk">uvx golpo-mcp        # + clé GOLPO_API_KEY dans la config MCP du client</code>
+    <div class="warnline">⚠️ API/MCP réservés aux plans <b>API seule</b>, <b>Scale</b> ou <b>Business + add-on</b> — soit <b>≥ 200 $/mois</b> (le pay-as-you-go n'y donne PAS droit). Écosystème tout jeune (v0.1, mai 2026)&nbsp;: pour un groupement qui automatise, pas pour une officine isolée.</div>
+  </div>
+
+  <div class="sec-h"><span class="n serif">4</span><h2 class="serif">5 astuces vraiment utiles</h2><span class="rule"></span></div>
+  <ol class="tips">
+    <li><b>Format court, on découpe.</b> Le crédit = la minute&nbsp;; une vidéo patient efficace fait 60–120 s. Plusieurs clips courts &gt; un long.</li>
+    <li><b>Script verrouillé depuis une source fiable</b> (fiche HAS, RCP, doc Assurance Maladie) avant de générer&nbsp;: chaque ré-édition reconsomme des crédits.</li>
+    <li><b>Validation pharmacien obligatoire.</b> L'IA peut halluciner posologie/contre-indications&nbsp;: relire chaque script, ne jamais diffuser tel quel.</li>
+    <li><b>Optimiser le coût&nbsp;:</b> annuel ≈ −17 %, recharges par palier (+20 cr/40 $ sur Starter) — et fuyez le pay-as-you-go sans abonnement (jusqu'à 8 $/min).</li>
+    <li><b>Sous-titres = fichier SRT à part</b> (rien n'est incrusté) — à importer sur YouTube. Le <b>multilingue n'est pas dans Starter</b>&nbsp;: il faut Creator (99,99 $) ou l'add-on (+40 $/mois).</li>
+  </ol>
+
+  <div class="sec-h"><span class="n serif">5</span><h2 class="serif">Place dans la concurrence</h2><span class="rule"></span></div>
+  <table class="comp">
+    <tr><th style="width:23%">Outil</th><th style="width:20%">Type</th><th style="width:34%">Pour l'officine</th><th style="width:23%">Accès IA / Claude</th></tr>
+    <tr class="star"><td><b>Golpo</b></td><td>IA · doc→whiteboard</td><td>Vulgarisation patient &amp; formation, en minutes</td><td><span class="tagm ok">API + MCP officiel</span></td></tr>
+    <tr><td>VideoScribe / Doodly</td><td>Whiteboard manuel</td><td>Beau rendu mais montage à la main, lent</td><td><span class="tagm no">— (pas d'IA/API)</span></td></tr>
+    <tr><td>Synthesia / HeyGen</td><td>Avatars parlants</td><td>Porte-parole humain, plutôt L&amp;D corporate</td><td><span class="tagm ok">MCP officiel (HeyGen)</span> · API (Synthesia)</td></tr>
+    <tr><td>invideo / Pictory</td><td>IA · stock &amp; montage</td><td>Réels/stock, repurposing, moins pédago</td><td><span class="tagm no">API limitée</span></td></tr>
+    <tr><td><b>Faire soi-même</b> (LLM+TTS+Remotion)</td><td>Pipeline maison</td><td>Gratuit/open-source, mais à développer</td><td><span class="tagm ok">100 % Claude</span></td></tr>
+  </table>
+
+  <div class="foot">
+    <div class="disc">⚠️ <b>Contenu santé&nbsp;:</b> l'IA peut halluciner (posologies, contre-indications). Vidéo toujours <b>validée par un pharmacien</b> avant diffusion — cadre&nbsp;: art. <b>R.4235-39/40/49 CSP</b> (information loyale, « tact et mesure »), code de déontologie réformé le <b>6 mars 2026</b> (décret 2026-156). Vidéo citant un médicament grand public&nbsp;: <b>visa ANSM obligatoire</b> (L.5122-8 CSP). Golpo n'est pas un dispositif médical. Prix USD relevés le 17/07/2026.</div>
+    <b>Sources&nbsp;:</b> video.golpoai.com (pricing, guides) · GitHub Golpo-AI &amp; heygen-com (code MCP vérifié) · Product Hunt/hunted.space · Hacker News (08/2025) · devkantkumar.com · OutlierKit · legifrance.gouv.fr (JORFTEXT000053618939) · ordre.pharmacien.fr · ansm.sante.fr · x-rates/FRED. Fact-checking multi-sources apothicAIre, juillet 2026. · <b>Éd. apothicAIre</b> — reproduction interne à l'officine autorisée.
+  </div>
+
+  <div class="pagenum"><span class="b">apothicAIre</span> · Fiche Golpo · <span class="b">2</span>/2</div>
+</section>
+
+</body>
+</html>
