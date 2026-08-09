@@ -63,7 +63,7 @@ fonctionnalités qu'on aurait spontanément dessinées.
 | **La e-réservation / préparation de commande.** Le patient transmet son ordonnance, l'officine prépare, le patient retire et paie au comptoir. C'est légal et déjà pratiqué. | C'est le cœur du parcours. On n'invente rien, on l'industrialise et on l'anticipe. |
 | **La délivrance fractionnée d'un mois** (R.5123-2 : pas plus de 4 semaines ou 30 jours par délivrance selon conditionnement). | Le rythme réglementaire *est* le rythme du produit. La cadence mensuelle n'est pas un choix marketing, c'est la loi. Cadeau. |
 | **La dispensation supplémentaire exceptionnelle** — décret n° 2024-1070 du 26 novembre 2024, applicable depuis le 29/11/2024. Ordonnance renouvelable expirée : le pharmacien dispense jusqu'à **3 mois, par délivrances successives d'un mois**, pour la poursuite d'un traitement chronique. Conditions : ordonnance initiale de 3 mois ou plus, première délivrance dans le mois suivant l'expiration. Exclus : les médicaments dont la durée de prescription est limitée à 12 semaines (hypnotiques, anxiolytiques, tramadol). | **C'est le moteur légal de la promesse « ton traitement ne s'arrête jamais ».** Et c'est un gisement d'alertes : fenêtre d'un mois à ne pas rater, compteur de 3 mois à tenir, exclusions à filtrer automatiquement. Un humain ne suit pas ça de tête sur 400 patients. Une machine, si. |
-| **L'ordonnance numérique**, obligatoire en ville depuis le 31/12/2024–01/01/2025, en généralisation chez les prescripteurs et les officines en 2026. | À terme, la source d'entrée propre : QR code scanné au comptoir plutôt que photo d'ordonnance. À ne pas construire en V1, mais à ne pas s'interdire dans le modèle de données. |
+| **L'ordonnance numérique**, obligatoire en ville depuis le 31/12/2024–01/01/2025, en généralisation chez les prescripteurs et les officines en 2026. Pharmony One fait partie des dix logiciels ayant achevé la présérie et autorisés au déploiement national (avril 2026). | La source d'entrée propre, et elle est déjà là : prescriptions structurées plutôt que photo d'ordonnance. À ne pas construire en V1, mais le modèle de données doit l'accueillir dès le départ — et le moteur de prédiction en profite directement (§3.1). |
 
 ### 1.3 Reformulation
 
@@ -149,7 +149,7 @@ Trivial sur le papier. Les difficultés réelles :
 | Difficulté | Traitement proposé |
 |---|---|
 | `unités_par_boîte` | Résolu par le CIP13 via la BDPM — tu as déjà le tool `fiche_medicament` dans Domi. À réutiliser, pas à réécrire. |
-| `doses_par_jour` : la posologie est du texte libre (« 1 cp matin et soir », « ½ le matin, 1 le soir », « 1 cp/j sauf le dimanche ») | Grammaire déterministe sur les ~50 motifs qui couvrent l'essentiel, **plus** un repli LLM sur la queue de distribution, avec un **score de confiance** stocké. Une ligne à faible confiance n'entre pas dans un plan automatique : elle part en file de validation humaine. |
+| `doses_par_jour` : la posologie est du texte libre (« 1 cp matin et soir », « ½ le matin, 1 le soir », « 1 cp/j sauf le dimanche ») | Grammaire déterministe sur les ~50 motifs qui couvrent l'essentiel, **plus** un repli LLM sur la queue de distribution, avec un **score de confiance** stocké. Une ligne à faible confiance n'entre pas dans un plan automatique : elle part en file de validation humaine. **À vérifier avant de coder** : Pharmony One étant référencé Ségur et déployé sur l'ordonnance numérique, une part des prescriptions récentes est peut-être déjà structurée dans le LGO. Si c'est le cas, la difficulté s'effondre sur le flux récent — et ne subsiste que sur l'historique et les ordonnances d'origine papier. |
 | Posologie non prédictible (« si besoin », « à la demande ») | Ne jamais planifier. Statut `cadence_indéterminée`. Mieux vaut un trou assumé qu'une fausse promesse. |
 | Formes non unitaires : crèmes, collyres, sprays, inhalateurs, stylos d'insuline | Le comptage d'unités n'a pas de sens. Table d'heuristiques par forme galénique (durée d'usage typique), confiance basse par construction, recalibrée par l'observation des retraits réels. |
 | Schémas séquentiels : contraception 21/28, décroissance de corticoïdes | Cas particuliers explicites, pas de généralisation hasardeuse. |
@@ -298,13 +298,14 @@ que le gain de temps soit mesuré sur ce sous-ensemble avant l'extension.
 ### 5.1 Vue d'ensemble
 
 ```
-┌─ OFFICINE (Windows, LGO Smart RX NEV / Pharmony) ──────────┐
-│  Agent local — Python, pattern Robot NEV                   │
+┌─ LGO PHARMONY ONE — cloud natif, référencé Ségur ──────────┐
+│  Depuis le 2026-07-06 (bascule effective, coupure Smart RX)│
+│  Connecteur — cloud→cloud, pas d'agent sur poste Windows   │
 │  · extraction délivrances + ordonnances (nuit)             │
 │  · LECTURE SEULE, jamais d'écriture dans le LGO            │
-│  · file locale + reprise sur incident                      │
+│  · file + reprise sur incident, côté enclave               │
 └───────────────────────┬────────────────────────────────────┘
-                        │  HTTPS + mTLS, push sortant uniquement
+                        │  HTTPS, sortant uniquement
                         ▼
 ┌─ ENCLAVE HDS — OVHcloud, région France ────────────────────┐
 │  API                 (Public Cloud instance, HDS)          │
@@ -366,21 +367,42 @@ un détail contractuel : c'est un coût récurrent à intégrer au budget dès m
 > **doit être revérifiée sur la documentation OVHcloud avant tout engagement**. Idem pour le détail
 > de la fiche professionnelle CNOP sur la livraison à domicile.
 
-### 5.3 L'agent local — le maillon faible, à traiter comme tel
+### 5.3 L'accès aux données du LGO
 
-L'accès aux données du LGO est le vrai point dur. Options, de la meilleure à la moins bonne :
+**Le LGO est tranché : Pharmony One, en production depuis le 2026-07-06** (bascule effective,
+coupure Smart RX / Offisanté). Ça change trois choses par rapport à l'hypothèse Smart RX.
+
+**1. Il n'y a plus d'agent local à écrire.** Pharmony One est un LGO **nativement cloud** — le
+premier référencé Ségur en cloud natif en France. Le pattern Robot NEV (PyAutoGUI sur client lourd
+Windows) n'a plus d'objet ici : il n'y a pas de client lourd à piloter. On vise un connecteur
+cloud→cloud, sans machine à maintenir dans l'officine, sans poste allumé la nuit, sans casse à
+chaque mise à jour du LGO. C'est une simplification majeure de l'architecture — et une source
+d'incidents en moins.
+
+**2. Le mode d'accès se cherche autrement.** Options, de la meilleure à la moins bonne :
 
 | Voie | Réaliste ? |
 |---|---|
-| **API éditeur** (Pharmony, si la bascule est effective) | La meilleure si elle existe. **À vérifier en premier** — c'est une question à poser à l'éditeur, pas à résoudre en code. |
-| **Export planifié** (CSV, fichier de délivrances) + watcher local | Le compromis pragmatique. Robuste, peu couplé. |
-| **RPA / Robot NEV** | Pattern déjà maîtrisé chez toi. Fragile aux mises à jour du LGO, mais éprouvé. Le repli crédible. |
-| Téléservice ordonnance numérique | Hors de portée sans référencement Ségur en tant que LGO. |
+| **API éditeur** | La meilleure. Pharmony se positionne sur l'interopérabilité et le cloud — la question a des chances d'aboutir. **À poser à l'éditeur en premier**, avant toute ligne de code. |
+| **Export planifié** (délivrances, format tabulaire) déposé sur un point de collecte | Le compromis pragmatique si l'API n'existe pas ou tarde. Robuste, peu couplé, négociable rapidement. |
+| **Rétro-ingénierie de la session web** | LGO cloud = application web authentifiée. C'est exactement le terrain de ton skill `scraping-pharma-platforms`, et la règle R6 s'applique : capturer l'appel natif dans DevTools avant d'écrire quoi que ce soit. Le repli crédible — mais un repli, pas une cible : il n'a aucune garantie de stabilité et se négocie mal avec un éditeur. |
+| Téléservice ordonnance numérique en direct | Hors de portée : réservé aux LGO référencés. On passe *par* Pharmony, pas à côté. |
 | Dossier Pharmaceutique | Pas d'accès applicatif tiers. À écarter. |
 
-Une remarque de gouvernance : la bascule Pharmony était prévue au 06/07 et n'est **pas soldée** au
-dernier conseil de gérance — zéro commit Pharmony depuis. Ce projet-ci en dépend directement.
-Trancher le LGO avant de dessiner l'agent, sinon on développe deux fois.
+**3. L'ordonnance numérique n'est plus un horizon lointain.** Pharmony One figure parmi les dix
+logiciels ayant achevé la présérie et autorisés au déploiement national (avril 2026). Les
+prescriptions récentes arrivent donc potentiellement **structurées** dans le LGO — ce qui attaque de
+front la principale difficulté du moteur de prédiction (§3.1). À vérifier concrètement&nbsp;: ce que
+l'ordonnance numérique porte de la posologie, et sous quelle forme.
+
+> **Ce qu'il reste à lever, et c'est la seule inconnue bloquante** : ce que Pharmony expose, et à
+> quelles conditions. Une question à l'éditeur, pas un problème d'ingénierie. Tant qu'elle n'est pas
+> répondue, la P0 se fait sur un export manuel — voir §7.
+
+*Note de gouvernance* : le conseil de gérance du 05/08 listait la bascule comme « passée, non
+soldée », avec zéro commit Pharmony depuis le 06/07. C'était une observation sur la **visibilité
+dans le dépôt**, pas sur la réalité opérationnelle — la bascule a bien eu lieu. L'écart entre les
+deux est précisément ce que ce conseil signale semaine après semaine.
 
 ### 5.4 Modèle de données — les entités qui comptent
 
@@ -505,8 +527,10 @@ c'est le signal d'alarme le plus important du tableau.
 
 Rien dans ce document ne bloque le démarrage de la P0. Ces cinq points bloquent la suite :
 
-1. **LGO** — Smart RX ou Pharmony, et l'éditeur expose-t-il une API ? Toute l'architecture d'ingestion
-   en dépend, et la bascule du 06/07 n'est pas soldée.
+1. **Ce que Pharmony expose** — le LGO est tranché (Pharmony One depuis le 06/07), la question qui
+   reste est l'accès : API éditeur, export planifié, ou rien. C'est un appel à passer, pas un
+   problème d'ingénierie, et c'est la seule inconnue qui borne l'architecture d'ingestion. À poser
+   dans la foulée : ce que l'ordonnance numérique porte de la posologie structurée.
 2. **Périmètre initial** — Théâtres seule (recommandé) ou d'emblée les 4 officines ? La réponse
    change le régime HDS, pas seulement l'échelle.
 3. **HDS réseau** — certification EtikPharma, abri Bunka.ai, ou contrats OVH séparés par officine ?
@@ -527,6 +551,10 @@ Rien dans ce document ne bloque le démarrage de la P0. Ces cinq points bloquent
 Concrètement — extraire 12 mois de délivrances des Théâtres, écrire le parseur de posologie et le
 calcul de date de fin, et produire un unique tableau : *date prédite vs date réelle de retour*, ligne
 par ligne. Rien d'autre. Pas d'interface, pas de base hébergée, pas de patient. Un notebook et un CSV.
+
+**La P0 n'attend pas la réponse de Pharmony** : un export manuel depuis l'interface suffit
+largement pour 12 mois d'historique sur une officine. C'est même préférable — on valide le moteur
+avant d'investir dans le tuyau, et on saura exactement quels champs demander à l'éditeur.
 
 Si l'erreur médiane tient sous 3 jours, tout le reste de ce document devient constructible. Si elle
 ne tient pas, on aura dépensé deux semaines au lieu de six mois.
@@ -577,6 +605,13 @@ Réglementaire et professionnel :
 - [Click & collect en officine : bonnes pratiques (Le Quotidien du Pharmacien)](https://www.lequotidiendupharmacien.fr/gestion-de-lofficine/e-sante/tout-sur-les-bonnes-pratiques-du-click-collect)
 - [Ordonnance numérique — doctrine du numérique en santé (ANS)](https://esante.gouv.fr/doctrine/ordonnance-numerique)
 - [Prescription électronique : où en est l'ordonnance numérique ? (CNOP)](https://www.ordre.pharmacien.fr/les-communications/focus-sur/les-actualites/prescription-electronique-ou-en-est-l-ordonnance-numerique)
+- [Le Ségur du numérique en santé pour l'officine (ANS)](https://esante.gouv.fr/segur/officine)
+
+LGO Pharmony :
+
+- [PHARMONY ONE — gestion d'officine (Pharmony France)](https://pharmony.fr/pharmony-one-gestion-officine/)
+- [Le LGO cloud PHARMONY obtient le référencement Ségur (Pharmony France)](https://pharmony.fr/1er-lgo-en-mode-cloud-pharmony-obtient-le-referencement-segur/)
+- [Logiciels référencés « Ségur » : mise à jour (CNOP)](https://www.ordre.pharmacien.fr/les-communications/focus-sur/les-actualites/logiciels-references-segur-mise-a-jour-d-ici-septembre)
 
 Modèle du rendez-vous mensuel :
 
