@@ -1,0 +1,15 @@
+{
+  "name": "plaquette-charte-etikpharma",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plaquette A4 recto (1 page) de la charte maison EtikPharma — HTML -> Chromium -> PDF.",
+  "scripts": {
+    "build": "node render-plaquette.js"
+  },
+  "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/lora": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.8",
+    "playwright-core": "^1.56.1"
+  }
+}
