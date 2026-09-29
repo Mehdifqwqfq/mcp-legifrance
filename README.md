@@ -64,6 +64,7 @@ Tous les tools acceptent `response_format` (`markdown` par défaut, ou `json`).
 | `get_code_toc` | `POST /consult/code/tableMatieres` | Table des matières d'un code consolidé |
 | `get_section` | `POST /consult/getSectionByCid` | Section + sous-sections + articles à date donnée |
 | `get_article` | `POST /consult/getArticle` | Verbatim d'un article par identifiant LEGIARTI |
+| `get_article_by_num` | `POST /consult/getArticleWithIdAndNum` | Article d'un code par son numéro (ex. R5132-36 CSP) ; affiche l'id de la version en vigueur, `date` optionnelle |
 | `get_jorf` | `POST /consult/jorf` | Texte JORF (décret/arrêté/loi) par CID JORFTEXT |
 | `consult_loda` | `POST /consult/lawDecree` | Texte LODA consolidé (loi/décret/arrêté non codifié) |
 
@@ -150,7 +151,11 @@ structuré attendu par le corpus `standards`.
   "pas de fin") sur `None` pour garder le Markdown propre.
 - Quota PISTE : pas de rate limit explicite documenté, mais on cache le token
   1h et on bat-volée à la demande — pas de pré-polling.
-- V1 expose 6 tools sur les 61 endpoints documentés dans l'OpenAPI Légifrance.
+- `getArticleWithIdAndNum` est **sensible à la casse** : la variante
+  `getArticleWithIdandNum` répond 403. Il **ignore** un champ `date` et renvoie
+  toujours la version en vigueur : `get_article_by_num` résout `date` lui-même
+  à partir de `articleVersions` (mesuré le 2026-09-29).
+- V1 expose 7 tools sur les 61 endpoints documentés dans l'OpenAPI Légifrance.
   Discipline V1 : on n'ajoute pas d'autre tool tant qu'un cas d'usage Etik
   n'en a pas besoin.
 

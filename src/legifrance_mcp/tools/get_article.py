@@ -32,9 +32,7 @@ def _strip_html(text: str | None) -> str:
 class GetArticleInput(StrictBase):
     article_id: str = Field(
         ...,
-        description=(
-            "Identifiant article (LEGIARTI…). Ex: 'LEGIARTI000006913651' = R.4235-1 CSP."
-        ),
+        description=("Identifiant article (LEGIARTI…). Ex: 'LEGIARTI000006913651' = R.4235-1 CSP."),
         examples=["LEGIARTI000006913651"],
     )
     response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN)
@@ -74,8 +72,23 @@ def _format_md(data: dict) -> str:
     art = data.get("article") or {}
     if not art:
         return "_(article introuvable)_"
+    lines = format_article_lines(art)
+    if data.get("dereferenced"):
+        lines.insert(1, "⚠️ L'API signale cet article comme **déréférencé** (`dereferenced: true`).")
+    return "\n".join(lines)
+
+
+def format_article_lines(art: dict) -> list[str]:
+    """Rendu Markdown commun à ``get_article`` et ``get_article_by_num``.
+
+    ``id`` = la VERSION précise de l'article (change à chaque modification) ;
+    ``cid`` = l'identifiant de sa 1re version, stable dans le temps. Les deux
+    sont affichés : n'afficher que le CID laissait croire que l'id demandé
+    avait été remplacé.
+    """
     num = art.get("num") or "?"
-    cid = art.get("cid") or art.get("id") or "?"
+    version_id = art.get("id") or "?"
+    cid = art.get("cid") or version_id
     etat = art.get("etat") or "?"
     start = ms_to_iso(art.get("dateDebut")) or "?"
     end = ms_to_iso(art.get("dateFin")) or "—"
@@ -84,10 +97,11 @@ def _format_md(data: dict) -> str:
 
     lines = [
         f"### Article {num}",
-        f"**CID** : `{cid}` · **État** : {etat} · **Période** : {start} → {end}",
+        f"**Id version** : `{version_id}` · **CID** : `{cid}`",
+        f"**État** : {etat} · **Période** : {start} → {end}",
         "",
         texte or "_(texte vide)_",
     ]
     if nota:
         lines += ["", "**NOTA**", nota]
-    return "\n".join(lines)
+    return lines

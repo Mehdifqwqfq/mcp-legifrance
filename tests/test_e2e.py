@@ -118,3 +118,18 @@ async def test_get_article_r4235_1(client):
     assert art.get("num") == "R4235-1"
     texte = (art.get("texte") or "").lower()
     assert "déontologie" in texte and "pharmaciens" in texte
+
+
+@pytest.mark.e2e
+async def test_get_article_by_num_r5132_36(client):
+    """R5132-36 CSP par son numéro — id = version en vigueur, cid = 1re version."""
+    r = await client.post_json(
+        "/consult/getArticleWithIdAndNum", {"id": CSP_TEXT_ID, "num": "R5132-36"}
+    )
+    art = r.get("article") or {}
+    assert art.get("num") == "R5132-36"
+    assert art.get("etat") == "VIGUEUR"
+    assert art.get("cid") == "LEGIARTI000006915590"
+    assert art.get("id", "").startswith("LEGIARTI")
+    assert art["context"]["titreTxt"][0]["id"] == CSP_TEXT_ID
+    assert any(v["id"] == art["id"] for v in art.get("articleVersions") or [])

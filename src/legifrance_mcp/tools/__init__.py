@@ -12,6 +12,7 @@ def register_all(mcp: FastMCP) -> None:
     """Register every tool module on the given FastMCP instance."""
     from legifrance_mcp.tools import (  # noqa: PLC0415
         get_article,
+        get_article_by_num,
         get_code_toc,
         get_jorf,
         get_section,
@@ -23,5 +24,6 @@ def register_all(mcp: FastMCP) -> None:
     get_code_toc.register(mcp)
     get_section.register(mcp)
     get_article.register(mcp)
+    get_article_by_num.register(mcp)
     get_jorf.register(mcp)
     loda.register(mcp)
