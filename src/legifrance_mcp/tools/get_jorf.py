@@ -25,6 +25,7 @@ def _clean(text: str | None) -> str:
     text = _WS_RE.sub(" ", text)
     return " ".join(line.strip() for line in text.splitlines() if line.strip())
 
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
