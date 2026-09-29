@@ -109,9 +109,7 @@ def register(mcp: FastMCP) -> None:
             }
         ]
         recherche: dict = {
-            "champs": [
-                {"typeChamp": "ALL", "criteres": criteres, "operateur": "ET"}
-            ],
+            "champs": [{"typeChamp": "ALL", "criteres": criteres, "operateur": "ET"}],
             "pageNumber": params.page_number,
             "pageSize": params.page_size,
             "operateur": "ET",
@@ -126,9 +124,7 @@ def register(mcp: FastMCP) -> None:
         if fond == "CODE_DATE":
             iso = params.date or date.today().isoformat()
             try:
-                ts_ms = int(
-                    date.fromisoformat(iso).strftime("%s")
-                ) * 1000
+                ts_ms = int(date.fromisoformat(iso).strftime("%s")) * 1000
             except ValueError:
                 return f"Erreur Légifrance: date invalide '{iso}' (attendu YYYY-MM-DD)."
             filtres.append({"facette": "DATE_VERSION", "singleDate": ts_ms})

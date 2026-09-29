@@ -73,9 +73,7 @@ class LegifranceClient:
                     },
                 )
             except httpx.HTTPError as exc:
-                raise LegifranceError(
-                    f"Échec réseau Légifrance: {exc}", url=url
-                ) from exc
+                raise LegifranceError(f"Échec réseau Légifrance: {exc}", url=url) from exc
 
             elapsed_ms = int((time.monotonic() - start) * 1000)
             logger.info("← %d (%dms) %s", response.status_code, elapsed_ms, path)
